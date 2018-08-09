@@ -40,12 +40,15 @@ errorCode, car_handle = vrep.simxGetObjectHandle(clientID, "Pioneer_p3dx", vrep.
 # GPS
 #errorCode, GPS = vrep.simxGetObjectHandle(clientID, "GPS_reference", vrep.simx_opmode_blocking)
 
+#get Distance Object Handle
+errorCode, dist_handle = vrep.simxGetDistanceHandle(clientID, "Distance", vrep.simx_opmode_blocking)
+
 # Create a workbook and add a worksheet.
 workbook = xlsxwriter.Workbook('data.xlsx')
 worksheet = workbook.add_worksheet()
 
 # Some data we want to write to the worksheet.
-defaults = ['X-posi', 'Y-posi', 'Z-posi', 'gyroX', 'gyroY', 'gyroZ', 'accelX', 'accelY', 'accelZ', 'alpha', 'beta', 'gamma', 'vx', 'vy', 'vz', 'Time']
+defaults = ['X-posi', 'Y-posi', 'Z-posi', 'gyroX', 'gyroY', 'gyroZ', 'accelX', 'accelY', 'accelZ', 'alpha', 'beta', 'gamma', 'vx', 'vy', 'vz', 'Time', 'dis']
 t = 0
 
 # Iterate over the data and write it out row by row.
@@ -55,7 +58,7 @@ for i, default in enumerate(defaults):
     
 i=1
 try:
-    while i<10001:
+    while i<101:
         # Pause Simulation
         #vrep.simxPauseSimulation(clientID, vrep.simx_opmode_oneshot)
         
@@ -86,7 +89,10 @@ try:
         
         # Velocity
         errorCode, LinearV, AngularV = vrep.simxGetObjectVelocity(clientID, car_handle, vrep.simx_opmode_streaming if i is 1 else vrep.simx_opmode_buffer)
-        
+
+        # Distance
+        errorCode, d = vrep.simxReadDistance(clientID, dist_handle, vrep.simx_opmode_streaming)
+       
         # Simulation Time
         if t != vrep.simxGetLastCmdTime(clientID):
             t = vrep.simxGetLastCmdTime(clientID)
@@ -94,7 +100,7 @@ try:
             if not i % 100 :
                 print(i)
 
-            for col, data in enumerate([pos[0], pos[1], pos[2], gyroX, gyroY, gyroZ, accelX, accelY, accelZ, ori[0], ori[1], ori[2], LinearV[0], LinearV[1], LinearV[2], t]):
+            for col, data in enumerate([pos[0], pos[1], pos[2], gyroX, gyroY, gyroZ, accelX, accelY, accelZ, ori[0], ori[1], ori[2], LinearV[0], LinearV[1], LinearV[2], t, d]):
                 worksheet.write(i, col, data)
         else:
             i -= 1
